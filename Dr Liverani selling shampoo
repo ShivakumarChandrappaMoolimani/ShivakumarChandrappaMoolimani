@@ -1,0 +1,27 @@
+The dataset here gives you the profit made in each quarter by Dr Liverani selling shampoo in her
+shop in West London over the past 10 years (data from the first quarter in 2011 to the fourth
+quarter in 2020). Forecasting for the year 2021.
+
+
+
+Code used to carry out the analysis and forecast.
+library(tseries)
+library(forecast)
+
+#Load the data and plot the time series
+setwd("E:/QMUL/Time series")
+shampoo <- read.table("data2.txt")
+shampoo_profit_per_quarter <- ts(shampoo,start=c(2011,1),end=c(2020,4),frequency=4)
+plot(shampoo_profit_per_quarter,ylab="Shampoo_proft", xlab="years")
+pacf(shampoo_profit_per_quarter)
+
+#using auto.arima to find the best fit model
+auto.arima(shampoo_profit_per_quarter, seasonal = TRUE)
+
+#Forecast for 2021
+model1 <- auto.arima(shampoo_profit_per_quarter, seasonal = TRUE)
+forecast_2021 <- forecast(model1,h=4)
+plot(forecast_2021,xlab="years",ylab="Shampoo_profit")
+
+#forecast values for 2021
+forecast_2021[1:4]
