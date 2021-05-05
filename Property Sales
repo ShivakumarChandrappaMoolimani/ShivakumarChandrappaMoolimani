@@ -1,0 +1,10 @@
+
+
+PSdata = read.csv(“property-sales.csv”, header=TRUE, StringsAsFactors=TRUE)
+Summary(PSdata)
+
+#overall housing price and its distribution 
+ggplot(HousingData, aes(x = SalePriceTh)) + geom_histogram(binwidth = 5) + ggtitle("Sales Histogram") + ylab("Frequency") + xlab("Price in thousands")
+
+#
+ggplot(HousingData, aes(x =MSZoning, y = SalePriceTh)) +geom_boxplot(color="blue",outlier.color="red")+ggtitle("Box Plot by Zone")+ylab("Price")+xlab("Zone")   
