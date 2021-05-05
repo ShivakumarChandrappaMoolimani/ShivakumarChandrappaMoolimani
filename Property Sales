@@ -6,5 +6,97 @@ Summary(PSdata)
 #overall housing price and its distribution 
 ggplot(HousingData, aes(x = SalePriceTh)) + geom_histogram(binwidth = 5) + ggtitle("Sales Histogram") + ylab("Frequency") + xlab("Price in thousands")
 
-#
+
 ggplot(HousingData, aes(x =MSZoning, y = SalePriceTh)) +geom_boxplot(color="blue",outlier.color="red")+ggtitle("Box Plot by Zone")+ylab("Price")+xlab("Zone")   
+
+ggplot(HousingData, aes(x =MSZoning)) +geom_bar()+ggtitle("Distribution by Zone")+ylab("Number of Houses")+xlab("Zone")
+
+ggplot(HousingData, aes(x =SaleCondition)) +geom_bar()+ggtitle("Distribution by Sale condition")+ylab("Number of Houses")+xlab("Sale Condition")
+
+ggplot(HousingData, aes(x =as.factor(OverallQual), y = SalePriceTh)) +geom_boxplot(color="darkgoldenrod4",outlier.color="red")+ggtitle("Box Plot by Qual Rate")+ylab("Price")+xlab("Qual Rate")
+
+ggplot(HousingData, aes(x =BldgType, y = SalePriceTh)) +geom_boxplot(color="blueviolet",outlier.color="red")+ggtitle("Box Plot by BldType")+ylab("Price")+xlab("BldType")
+
+#Transform chr to numeric#
+HousingData$CentralAirN= as.numeric(factor(HousingData$CentralAir,levels = c("N", "Y"), labels=c(0,1), ordered = TRUE ))
+HousingData$KitchenQualN=as.numeric(factor(HousingData$KitchenQual, levels= c("Ex","Gd","TA","Fa","Po"), labels=c(5,4,3,2,1), ordered=TRUE))
+HousingData$FireplaceN=as.numeric(factor(HousingData$Fireplace, levels=c("N", "Y"), labels=c(0,1),ordered = TRUE ))
+
+
+CorData=HousingData[ , c("LotArea","OverallQual","OverallCond","YearBuilt", "CentralAirN","GrLivArea","FullBath", "HalfBath","BedroomAbvGr", "KitchenAbvGr","KitchenQualN", "FireplaceN", "GarageArea", "SalePriceTh")]
+Correlation=cor(CorData)
+corrplot(Correlation, method ="color")
+
+
+ggplot(HousingData, aes(x =OverallQual, y = SalePriceTh)) +geom_point()+geom_smooth(method=lm , color="red")+ggtitle("Scatter Plot of Price and Quality")+ylab("Price")+xlab("OverallQual")   
+
+ggplot(HousingData, aes(x =GrLivArea, y = SalePriceTh)) +geom_point()+geom_smooth(method=lm , color="red")+ggtitle("Scatter Plot of Price and GrLivArea")+ylab("Price")+xlab("GrLivArea")   
+
+ggplot(HousingData, aes(x =KitchenQualN, y = SalePriceTh)) +geom_point()+geom_smooth(method=lm , color="red")+ggtitle("Scatter Plot of Price and KitchenQual")+ylab("Price")+xlab("KitchenQual")   
+
+ggplot(HousingData, aes(x =GarageArea, y = SalePriceTh)) +geom_point()+geom_smooth(method=lm , color="red")+ggtitle("Scatter Plot of Price and GarageArea")+ylab("Price")+xlab("GarageArea") 
+
+fiti24 = lm(PSdata$SalePrice ~ PSdata$GrLivArea + PSdata$YearBuilt + PSdata$GarageArea + PSdata$LotArea + PSdata$FullBath + PSdata$OverallQual + PSdata$HalfBath + PSdata$CentralAir + PSdata$Fireplace + PSdata$OverallCond + PSdata$BedroomAbvGr + PSdata$MSZoning + PSdata$SaleCondition + PSdata$KitchenAbvGr + PSdata$KitchenQual + PSdata$HouseStyle + PSdata$BldgType, data=PSdata[-i,])  
+
+#Using the Leave-one-out cross-validation we start adding the variable each time and try to find the PRESS statistic value. The summary of the model is in Appendix 2.
+mult_reg13 = lm(PSdata$SalePrice ~ PSdata$GrLivArea + PSdata$YearBuilt + PSdata$GarageArea + PSdata$LotArea + PSdata$FullBath + PSdata$OverallQual + PSdata$HalfBath + PSdata$CentralAir + PSdata$Fireplace + PSdata$OverallCond + PSdata$BedroomAbvGr + PSdata$MSZoning + PSdata$SaleCondition, data = PSdata)
+
+#Predict of model
+n <- nrow(PSdata)
+cv_res13 = vector(length=n)
+for(i in 1:n){
+  fiti13 = lm(PSdata$SalePrice ~ PSdata$GrLivArea + PSdata$YearBuilt + PSdata$GarageArea + PSdata$LotArea + PSdata$FullBath + PSdata$OverallQual + PSdata$HalfBath + PSdata$CentralAir + PSdata$Fireplace + PSdata$OverallCond + PSdata$BedroomAbvGr + PSdata$MSZoning + PSdata$SaleCondition, data=PSdata[-i,])
+  predi13 = predict(fiti20, newdata=PSdata[i,])
+  cv_res13[i] = PSdata$SalePrice[i] – predi13
+}
+
+#PRESS value for the model
+PRESS13 = sum(cv_res13^2)
+PRESS13
+
+n <- nrow(PSdata)
+RMSE13 <- sqrt(PRESS13/n)
+RMSE13
+
+ #run a multiple logistic regression, check summary output to assess statistical significance
+mult_logreg2 = glm(as.factor(PSdata$Fireplace) ~ PSdata$BldgType + PSdata$HouseStyle + PSdata$OverallQual + PSdata$YearBuilt +  PSdata$CentralAir + PSdata$GrLivArea + PSdata$OverallCond + PSdata$HalfBath + PSdata$BedroomAbvGr + PSdata$KitchenAbvGr + PSdata$SalePrice,family=binomial, data=PSdata)
+summary(mult_logreg2)
+
+# Split data into training and test data
+ #define a vector of random row numbers to sample test dataset from original dataset, with around 1/3 in the test data and 2/3 in the training data
+testindex = sample(1:n, size=n/3)  
+# test dataset
+test=PSdata[testindex,]
+ nrow(test)
+[1] 486
+# training dataset
+train=PSdata[-testindex,]
+nrow(train)
+[1] 974
+# fit model to training data
+# calculate predicted probabilities for the test data
+testprob=predict(logreg, newdata=test,type="response") 
+
+#now we want to compare the prediction from the classifier using the test data predictors with the actual responses the test data
+# 1. create a vector of the same length as the testset containing only "No"
+testpred=rep("No",nrow(test))
+# 2. set those entries in the vector to "Yes" when the probability is greater than the threshold (here 1/2)
+testpred[testprob>0.5]="Yes" 
+able(testpred)
+testpred
+ No Yes 
+226 755 
+#calculate the confusion matrix by comparing the vector testpred with the default column in the testset
+confmatrix=table(as.factor(PSdata$Fireplace), testpred) 
+confmatrix
+
+#true positive rate
+confmatrix[2,2]/(confmatrix[2,2]+confmatrix[2,1])
+
+#false positive rate
+ confmatrix[1,2]/(confmatrix[1,1]+confmatrix[1,2]) 
+
+ #overall misclassification error
+ (confmatrix[1,2]+confmatrix[2,1])/nrow(test)
+
+
